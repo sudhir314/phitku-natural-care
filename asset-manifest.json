@@ -1,20 +1,20 @@
 {
   "files": {
-    "main.css": "/phitku-natural-care/static/css/main.faada638.css",
-    "main.js": "/phitku-natural-care/static/js/main.13a3ac79.js",
-    "static/js/453.d7446e4a.chunk.js": "/phitku-natural-care/static/js/453.d7446e4a.chunk.js",
-    "static/media/blog1.webp": "/phitku-natural-care/static/media/blog1.71db93c23857543f7fcb.webp",
-    "static/media/founder.webp": "/phitku-natural-care/static/media/founder.21f72e69a0393457c4a0.webp",
-    "static/media/blog3.webp": "/phitku-natural-care/static/media/blog3.d96bd12a18b00d0d5d45.webp",
-    "static/media/action.webp": "/phitku-natural-care/static/media/action.05b8015c83bab56d7f9d.webp",
-    "static/media/blog2.webp": "/phitku-natural-care/static/media/blog2.714271eb6e890941fc76.webp",
-    "index.html": "/phitku-natural-care/index.html",
-    "main.faada638.css.map": "/phitku-natural-care/static/css/main.faada638.css.map",
-    "main.13a3ac79.js.map": "/phitku-natural-care/static/js/main.13a3ac79.js.map",
-    "453.d7446e4a.chunk.js.map": "/phitku-natural-care/static/js/453.d7446e4a.chunk.js.map"
+    "main.css": "/static/css/main.faada638.css",
+    "main.js": "/static/js/main.19f0d03d.js",
+    "static/js/453.d7446e4a.chunk.js": "/static/js/453.d7446e4a.chunk.js",
+    "static/media/blog1.webp": "/static/media/blog1.71db93c23857543f7fcb.webp",
+    "static/media/founder.webp": "/static/media/founder.21f72e69a0393457c4a0.webp",
+    "static/media/blog3.webp": "/static/media/blog3.d96bd12a18b00d0d5d45.webp",
+    "static/media/action.webp": "/static/media/action.05b8015c83bab56d7f9d.webp",
+    "static/media/blog2.webp": "/static/media/blog2.714271eb6e890941fc76.webp",
+    "index.html": "/index.html",
+    "main.faada638.css.map": "/static/css/main.faada638.css.map",
+    "main.19f0d03d.js.map": "/static/js/main.19f0d03d.js.map",
+    "453.d7446e4a.chunk.js.map": "/static/js/453.d7446e4a.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.faada638.css",
-    "static/js/main.13a3ac79.js"
+    "static/js/main.19f0d03d.js"
   ]
 }
