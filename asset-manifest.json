@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/phitku-natural-care/static/css/main.faada638.css",
-    "main.js": "/phitku-natural-care/static/js/main.8d957973.js",
+    "main.js": "/phitku-natural-care/static/js/main.13a3ac79.js",
     "static/js/453.d7446e4a.chunk.js": "/phitku-natural-care/static/js/453.d7446e4a.chunk.js",
     "static/media/blog1.webp": "/phitku-natural-care/static/media/blog1.71db93c23857543f7fcb.webp",
     "static/media/founder.webp": "/phitku-natural-care/static/media/founder.21f72e69a0393457c4a0.webp",
@@ -10,11 +10,11 @@
     "static/media/blog2.webp": "/phitku-natural-care/static/media/blog2.714271eb6e890941fc76.webp",
     "index.html": "/phitku-natural-care/index.html",
     "main.faada638.css.map": "/phitku-natural-care/static/css/main.faada638.css.map",
-    "main.8d957973.js.map": "/phitku-natural-care/static/js/main.8d957973.js.map",
+    "main.13a3ac79.js.map": "/phitku-natural-care/static/js/main.13a3ac79.js.map",
     "453.d7446e4a.chunk.js.map": "/phitku-natural-care/static/js/453.d7446e4a.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.faada638.css",
-    "static/js/main.8d957973.js"
+    "static/js/main.13a3ac79.js"
   ]
 }
