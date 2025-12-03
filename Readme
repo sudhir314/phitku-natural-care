@@ -1,0 +1,50 @@
+# 🌿 Phitku | Natural Crystal Care E-Commerce
+
+**A Full-Stack MERN E-Commerce Application**
+
+[🚀 **View Live Website**](https://www.solvewithsudhir.in) | [⚙️ **Backend API**](https://phitku-natural-care.onrender.com)
+
+---
+
+## 📖 About The Project
+
+**Phitku** is a fully functional e-commerce platform designed for selling natural personal care products. It provides a seamless shopping experience for customers and a powerful dashboard for administrators to manage inventory.
+
+Built using the **MERN Stack** (MongoDB, Express, React, Node.js), this project demonstrates full-stack development capabilities, including secure authentication, cloud image storage, and responsive design.
+
+---
+
+## ✨ Key Features
+
+### 👤 **User Features**
+* **Authentication:** Secure Login & Registration (JWT & Bcrypt).
+* **Browse & Filter:** Filter products by Category, Price, and Availability.
+* **Shopping Cart:** Add/Remove items and adjust quantities.
+* **Product Details:** View detailed descriptions, pricing, and ratings.
+* **Responsive Design:** Optimized for Mobile, Tablet, and Desktop.
+
+### 🛡️ **Admin Dashboard**
+* **Product Management:** Add, Edit, and Delete products.
+* **Image Upload:** Integrated **Cloudinary** for drag-and-drop image uploads.
+* **Order Management:** View customer orders and update shipping status (Pending -> Shipped -> Delivered).
+* **Secure Access:** Protected routes restrict access to Admin users only.
+
+---
+
+## 🛠️ Tech Stack
+
+| Component | Technology |
+| :--- | :--- |
+| **Frontend** | React.js, Tailwind CSS, Lucide Icons, React Router |
+| **Backend** | Node.js, Express.js |
+| **Database** | MongoDB Atlas (Cloud) |
+| **Storage** | Cloudinary (Image Hosting) |
+| **Deployment** | GitHub Pages (Frontend), Render (Backend) |
+
+---
+
+## ⚙️ Installation & Run Locally
+
+If you want to run this project on your local machine, follow these steps:
+
+### 
