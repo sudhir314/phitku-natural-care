@@ -7,7 +7,7 @@ import Shop from './pages/Shop';
 import Story from './pages/Story';
 import Ingredients from './pages/Ingredients';
 import Login from './pages/Login';
-import ForgotPassword from './pages/ForgotPassword'; // --- NEW IMPORT ---
+import ForgotPassword from './pages/ForgotPassword'; 
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import Payment from './pages/Payment';
@@ -23,11 +23,30 @@ function App() {
   const [currentOrder, setCurrentOrder] = useState(null);
   const [discount, setDiscount] = useState(0); 
 
+  // --- FIX: Safer Local Storage Loading ---
+  // This prevents the "undefined is not valid JSON" crash
   useEffect(() => {
+    // Safer User Loading
     const storedUser = localStorage.getItem('user');
-    if (storedUser) setUser(JSON.parse(storedUser));
+    if (storedUser && storedUser !== "undefined" && storedUser !== "null") {
+        try {
+            setUser(JSON.parse(storedUser));
+        } catch (error) {
+            console.error("Corrupt user data found, clearing...", error);
+            localStorage.removeItem('user');
+        }
+    }
+
+    // Safer Cart Loading
     const storedCart = localStorage.getItem('cart');
-    if (storedCart) setCart(JSON.parse(storedCart));
+    if (storedCart && storedCart !== "undefined" && storedCart !== "null") {
+        try {
+            setCart(JSON.parse(storedCart));
+        } catch (error) {
+             console.error("Corrupt cart data found, clearing...", error);
+             localStorage.removeItem('cart');
+        }
+    }
   }, []);
 
   useEffect(() => {
@@ -114,7 +133,7 @@ function App() {
             <Route path="/story" element={<Story />} />
             <Route path="/ingredients" element={<Ingredients />} />
             <Route path="/login" element={<Login onLogin={handleLogin} />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} /> {/* --- NEW ROUTE --- */}
+            <Route path="/forgot-password" element={<ForgotPassword />} />
             
             <Route path="/cart" element={<Cart cartItems={cart} updateQuantity={updateCartQuantity} removeFromCart={removeFromCart} discount={discount} setDiscount={setDiscount} />} />
             <Route path="/checkout" element={<Checkout cart={cart} initCheckout={initCheckout} />} />

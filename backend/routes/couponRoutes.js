@@ -2,24 +2,28 @@ const express = require('express');
 const router = express.Router();
 const Coupon = require('../models/Coupon');
 const { protect, admin } = require('../middleware/authMiddleware');
-const nodemailer = require('nodemailer'); // Import Nodemailer
+const nodemailer = require('nodemailer'); 
 
-// --- EMAIL CONFIGURATION (Reused from Auth) ---
+// --- UPDATED EMAIL CONFIG FOR RENDER ---
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
+  tls: {
+    rejectUnauthorized: false
+  }
 });
 
-// --- 1. NEW: Subscribe Route (Sends Voucher) ---
+// --- 1. Subscribe Route (Sends Voucher) ---
 router.post('/subscribe', async (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ message: 'Email is required' });
 
   try {
-    // Send the Voucher Email
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: email,
@@ -46,7 +50,7 @@ router.post('/subscribe', async (req, res) => {
     res.json({ message: 'Voucher sent successfully!' });
   } catch (error) {
     console.error("Newsletter Error:", error);
-    res.status(500).json({ message: 'Failed to send email. Please try again.' });
+    res.status(500).json({ message: 'Failed to send email. Connection Timeout.' });
   }
 });
 
@@ -94,7 +98,6 @@ router.delete('/:id', protect, admin, async (req, res) => {
 router.post('/verify', async (req, res) => {
   const { code } = req.body;
   
-  // SPECIAL CASE: Allow the WELCOME10 code even if not in DB (or add it to DB manually later)
   if (code.toUpperCase() === 'WELCOME10') {
       return res.json({ code: 'WELCOME10', discountPercentage: 10 });
   }

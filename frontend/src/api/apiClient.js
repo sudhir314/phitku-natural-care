@@ -3,6 +3,8 @@ import toast from 'react-hot-toast';
 
 // Your Render Backend URL
 const API_URL = 'https://phitku-natural-care.onrender.com/api';
+// const API_URL = 'http://localhost:5000/api';
+
 
 const apiClient = axios.create({
     baseURL: API_URL,

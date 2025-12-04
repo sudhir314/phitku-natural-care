@@ -5,13 +5,18 @@ const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
 const User = require('../models/User');
 
-// --- 1. EMAIL CONFIGURATION ---
+// --- 1. EMAIL CONFIGURATION (UPDATED FOR RENDER) ---
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false, // true for 465, false for other ports
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
+  tls: {
+    rejectUnauthorized: false // Helps prevent SSL errors on some cloud servers
+  }
 });
 
 // --- 2. HELPER FUNCTIONS ---
@@ -35,17 +40,14 @@ const setRefreshTokenCookie = (res, refreshToken) => {
 
 // --- 3. AUTHENTICATION ROUTES ---
 
-// ==========================================
-//  SECTION A: REGISTRATION & LOGIN
-// ==========================================
-
-// --- REGISTER INITIATE (Send OTP) ---
+// --- STEP 1: REGISTER INITIATE (Send OTP) ---
 router.post('/register-init', async (req, res) => {
   try {
     const { name, email } = req.body;
     if (!name || !email) return res.status(400).json({ message: 'Name and Email required' });
 
     const emailLower = email.toLowerCase().trim();
+
     let user = await User.findOne({ email: emailLower });
     
     if (user && user.isVerified) {
@@ -53,7 +55,7 @@ router.post('/register-init', async (req, res) => {
     }
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpExpires = Date.now() + 10 * 60 * 1000; // 10 mins
+    const otpExpires = Date.now() + 10 * 60 * 1000; // Expires in 10 mins
 
     if (user) {
       user.name = name;
@@ -82,17 +84,19 @@ router.post('/register-init', async (req, res) => {
 
   } catch (err) {
     console.error("Register Init Error:", err);
-    res.status(500).json({ message: 'Server Error' });
+    res.status(500).json({ message: 'Server Error: Could not send OTP' });
   }
 });
 
-// --- VERIFY OTP (Check Code) ---
+// --- STEP 2: VERIFY OTP (Check Code) ---
 router.post('/verify-otp', async (req, res) => {
   try {
     const { email, otp } = req.body;
     const user = await User.findOne({ email: email.toLowerCase().trim() });
 
-    if (!user) return res.status(400).json({ message: 'User not found. Please register again.' });
+    if (!user) {
+      return res.status(400).json({ message: 'User not found. Please register again.' });
+    }
 
     if (String(user.otp).trim() !== String(otp).trim() || user.otpExpires < Date.now()) {
       return res.status(400).json({ message: 'Invalid or expired OTP' });
@@ -106,7 +110,7 @@ router.post('/verify-otp', async (req, res) => {
   }
 });
 
-// --- FINALIZE (Set Password & Login) ---
+// --- STEP 3: FINALIZE (Set Password & Login) ---
 router.post('/register-finalize', async (req, res) => {
   try {
     const { email, otp, password } = req.body;
@@ -154,7 +158,7 @@ router.post('/register-finalize', async (req, res) => {
   }
 });
 
-// --- LOGIN ---
+// --- LOGIN ROUTE ---
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -163,6 +167,7 @@ router.post('/login', async (req, res) => {
     const user = await User.findOne({ email: emailLower });
 
     if (!user) return res.status(400).json({ message: 'Invalid credentials' });
+    
     if (!user.isVerified) return res.status(400).json({ message: 'Account not verified. Please register again.' });
 
     const isMatch = await bcrypt.compare(password, user.password);
@@ -188,11 +193,8 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// ==========================================
-//  SECTION B: FORGOT PASSWORD (NEW)
-// ==========================================
+// --- FORGOT PASSWORD ROUTES ---
 
-// 1. Forgot Password - Initiate (Send OTP)
 router.post('/forgot-password', async (req, res) => {
   try {
     const { email } = req.body;
@@ -201,15 +203,13 @@ router.post('/forgot-password', async (req, res) => {
     const user = await User.findOne({ email: emailLower });
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    // Generate OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpExpires = Date.now() + 10 * 60 * 1000; // 10 mins
+    const otpExpires = Date.now() + 10 * 60 * 1000; 
 
     user.otp = otp;
     user.otpExpires = otpExpires;
     await user.save();
 
-    // Send Email
     await transporter.sendMail({
         from: process.env.EMAIL_USER,
         to: emailLower,
@@ -219,11 +219,11 @@ router.post('/forgot-password', async (req, res) => {
 
     res.json({ message: 'OTP sent to your email' });
   } catch (error) {
+    console.error("Forgot Password Error:", error);
     res.status(500).json({ message: 'Server Error' });
   }
 });
 
-// 2. Verify Forgot Password OTP
 router.post('/verify-forgot-otp', async (req, res) => {
     try {
         const { email, otp } = req.body;
@@ -241,7 +241,6 @@ router.post('/verify-forgot-otp', async (req, res) => {
     }
 });
 
-// 3. Reset Password (Final Step)
 router.post('/reset-password', async (req, res) => {
     try {
         const { email, otp, password } = req.body;
@@ -249,12 +248,10 @@ router.post('/reset-password', async (req, res) => {
 
         if (!user) return res.status(404).json({ message: 'User not found' });
 
-        // Security Check: OTP must match again
         if (String(user.otp).trim() !== String(otp).trim() || user.otpExpires < Date.now()) {
             return res.status(400).json({ message: 'Session expired. Please try again.' });
         }
         
-        // Password Strength Check
         const strongPasswordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/;
         if (!strongPasswordRegex.test(password)) {
             return res.status(400).json({ message: 'Password too weak (Min 8 chars, letter & number required)' });
@@ -274,11 +271,7 @@ router.post('/reset-password', async (req, res) => {
     }
 });
 
-
-// ==========================================
-//  SECTION C: UTILS
-// ==========================================
-
+// --- UTILS ---
 router.post('/logout', (req, res) => {
     res.clearCookie('refreshToken');
     res.status(200).json({ message: 'Logged out' });

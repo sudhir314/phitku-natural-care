@@ -41,7 +41,7 @@ const Navbar = ({ cartCount = 0, user, onLogout }) => {
       
       {/* Announcement Bar */}
       <div className="bg-black text-white text-[10px] md:text-xs py-1.5 px-4 flex justify-center items-center tracking-wide">
-        <span className="font-medium text-center truncate">Free Shipping on All Orders Above ₹999 | Use Code: PHITKU30</span>
+        <span className="font-medium text-center truncate">Free Shipping on All Orders Above ₹999 | Use Code: PHITKU10</span>
       </div>
 
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">

@@ -9,6 +9,8 @@ const Login = ({ onLogin }) => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  // --- REGISTRATION WIZARD STATE ---
+  // Step 1: Details (Name, Email) -> Step 2: OTP -> Step 3: Password
   const [regStep, setRegStep] = useState(1); 
 
   const [formData, setFormData] = useState({
@@ -23,11 +25,14 @@ const Login = ({ onLogin }) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // --- VALIDATION HELPER: Strong Password ---
   const validatePasswordStrength = (password) => {
+    // Regex: Minimum 8 chars, at least one letter and one number
     const strongPasswordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/;
     return strongPasswordRegex.test(password);
   };
 
+  // --- HANDLER: Resend OTP ---
   const handleResendOTP = async () => {
     try {
         await apiClient.post('/auth/register-init', {
@@ -40,11 +45,15 @@ const Login = ({ onLogin }) => {
     }
   };
 
+  // --- MAIN SUBMIT HANDLER ---
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     try {
+        // ==========================
+        // FLOW 1: LOGIN
+        // ==========================
         if (isLogin) {
             if(!formData.email || !formData.password) {
                 throw new Error("Please fill in all fields");
@@ -57,7 +66,12 @@ const Login = ({ onLogin }) => {
             handleAuthSuccess(data, "Welcome back!");
             return;
         }
+
+        // ==========================
+        // FLOW 2: REGISTRATION
+        // ==========================
         
+        // --- Step 1: Send OTP ---
         if (regStep === 1) {
             if(!formData.name || !formData.email) throw new Error("Name and Email required");
             
@@ -67,32 +81,45 @@ const Login = ({ onLogin }) => {
             });
             
             toast.success(`OTP sent to ${formData.email}`);
-            setRegStep(2); 
+            setRegStep(2); // Move to OTP step
         }
+
+        // --- Step 2: Verify OTP ---
         else if (regStep === 2) {
             if(!formData.otp) throw new Error("Please enter the OTP");
             
+            // FIX: Trim the OTP to remove accidental spaces
             const cleanOTP = formData.otp.trim();
+
             await apiClient.post('/auth/verify-otp', {
                 email: formData.email.toLowerCase().trim(), 
                 otp: cleanOTP
             });
             
             toast.success("OTP Verified! Now set your password.");
-            setRegStep(3); 
+            setRegStep(3); // Move to Password step
         }
+
+        // --- Step 3: Set Password & Finalize ---
         else if (regStep === 3) {
+            // 1. Check for empty fields
             if(!formData.password || !formData.confirmPassword) {
                 throw new Error("Please fill both password fields");
             }
+
+            // 2. Strict Match Check
             if(formData.password !== formData.confirmPassword) {
+                // Clear passwords to force re-entry
                 setFormData(prev => ({ ...prev, password: '', confirmPassword: '' }));
                 throw new Error("Passwords do not match!");
             }
+
+            // 3. Strong Password Check
             if (!validatePasswordStrength(formData.password)) {
                 throw new Error("Password is weak! Use 8+ chars with letters & numbers.");
             }
 
+            // 4. Finalize
             const { data } = await apiClient.post('/auth/register-finalize', {
                 email: formData.email.toLowerCase().trim(), 
                 otp: formData.otp.trim(), 
@@ -103,6 +130,8 @@ const Login = ({ onLogin }) => {
         }
 
     } catch (error) {
+        console.error("Auth Error:", error);
+        // Extract exact error message from backend (e.g., "Invalid OTP")
         const serverMessage = error.response?.data?.message;
         toast.error(serverMessage || error.message || "Something went wrong");
     } finally {
@@ -122,6 +151,7 @@ const Login = ({ onLogin }) => {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-2xl shadow-xl">
         
+        {/* Header */}
         <div className="text-center">
           <h2 className="text-3xl font-extrabold text-gray-900">
             {isLogin ? 'Welcome Back' : 'Create Account'}
@@ -138,6 +168,7 @@ const Login = ({ onLogin }) => {
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
             
+            {/* LOGIN FORM */}
             {isLogin && (
                 <>
                     <div className="relative">
@@ -148,15 +179,17 @@ const Login = ({ onLogin }) => {
                         <Lock className="absolute top-3 left-3 text-gray-400" size={20} />
                         <input name="password" type="password" placeholder="Password" required className="pl-10 w-full p-3 border rounded-lg focus:ring-green-500 outline-none" onChange={handleChange} />
                     </div>
-                    {/* --- NEW: FORGOT PASSWORD LINK --- */}
+                    
+                    {/* --- FIX: Changed 'class' to 'className' here --- */}
                     <div className="text-right">
-                        <Link to="/forgot-password" class="text-xs font-medium text-green-600 hover:text-green-500">
+                        <Link to="/forgot-password" className="text-xs font-medium text-green-600 hover:text-green-500">
                             Forgot Password?
                         </Link>
                     </div>
                 </>
             )}
 
+            {/* REGISTER: STEP 1 (Details) */}
             {!isLogin && regStep === 1 && (
                 <div className="animate-in fade-in slide-in-from-right duration-300 space-y-4">
                     <div className="relative">
@@ -170,6 +203,7 @@ const Login = ({ onLogin }) => {
                 </div>
             )}
 
+            {/* REGISTER: STEP 2 (OTP) */}
             {!isLogin && regStep === 2 && (
                 <div className="animate-in fade-in zoom-in duration-300">
                     <div className="text-center mb-4 text-sm font-medium text-green-600 bg-green-50 p-2 rounded border border-green-100">
@@ -177,7 +211,11 @@ const Login = ({ onLogin }) => {
                     </div>
                     <div className="relative mb-2">
                         <KeyRound className="absolute top-3 left-3 text-green-600" size={20} />
-                        <input name="otp" type="text" maxLength="6" placeholder="Enter 6-digit OTP" required className="pl-10 w-full p-3 border border-green-300 rounded-lg focus:ring-green-500 text-xl tracking-[0.5em] font-bold text-center outline-none" onChange={handleChange} value={formData.otp} autoFocus />
+                        <input 
+                            name="otp" type="text" maxLength="6" placeholder="Enter 6-digit OTP" required 
+                            className="pl-10 w-full p-3 border border-green-300 rounded-lg focus:ring-green-500 text-xl tracking-[0.5em] font-bold text-center outline-none" 
+                            onChange={handleChange} value={formData.otp} autoFocus 
+                        />
                     </div>
                     <div className="text-right">
                         <button type="button" onClick={handleResendOTP} className="text-xs text-green-700 hover:underline flex items-center justify-end gap-1 ml-auto">
@@ -187,23 +225,49 @@ const Login = ({ onLogin }) => {
                 </div>
             )}
 
+            {/* REGISTER: STEP 3 (Set Password) */}
             {!isLogin && regStep === 3 && (
                  <div className="animate-in fade-in slide-in-from-right duration-300 space-y-4">
                      <div className="flex items-center gap-2 text-green-700 text-sm font-bold mb-2 bg-green-50 p-2 rounded border border-green-100">
                         <CheckCircle size={16} /> Email Verified! Set Password.
                      </div>
+                     
+                     {/* Password Policy Hint */}
                      <div className="text-xs text-gray-500 flex gap-2 items-start">
                         <ShieldAlert size={14} className="text-gray-400 mt-0.5 shrink-0" />
                         <span>Password must be 8+ chars and include at least one letter and number.</span>
                      </div>
+
                      <div className="relative">
                         <Lock className="absolute top-3 left-3 text-gray-400" size={20} />
-                        <input name="password" type="password" placeholder="Create Password" required className="pl-10 w-full p-3 border rounded-lg focus:ring-green-500 outline-none" onChange={handleChange} value={formData.password} />
+                        <input 
+                            name="password" 
+                            type="password" 
+                            placeholder="Create Password" 
+                            required 
+                            className="pl-10 w-full p-3 border rounded-lg focus:ring-green-500 outline-none" 
+                            onChange={handleChange} 
+                            value={formData.password}
+                        />
                     </div>
                     <div className="relative">
                         <Lock className="absolute top-3 left-3 text-gray-400" size={20} />
-                        <input name="confirmPassword" type="password" placeholder="Confirm Password" required className={`pl-10 w-full p-3 border rounded-lg focus:ring-green-500 outline-none ${formData.confirmPassword && formData.password !== formData.confirmPassword ? 'border-red-500 focus:border-red-500' : ''}`} onChange={handleChange} value={formData.confirmPassword} />
+                        <input 
+                            name="confirmPassword" 
+                            type="password" 
+                            placeholder="Confirm Password" 
+                            required 
+                            className={`pl-10 w-full p-3 border rounded-lg focus:ring-green-500 outline-none ${
+                                formData.confirmPassword && formData.password !== formData.confirmPassword 
+                                ? 'border-red-500 focus:border-red-500' 
+                                : ''
+                            }`}
+                            onChange={handleChange}
+                            value={formData.confirmPassword}
+                        />
                     </div>
+                    
+                    {/* Live Error Message */}
                     {formData.confirmPassword && formData.password !== formData.confirmPassword && (
                         <p className="text-xs text-red-500 font-bold text-center animate-pulse">
                             Passwords do not match!
@@ -214,12 +278,24 @@ const Login = ({ onLogin }) => {
 
           </div>
 
-          <button type="submit" disabled={loading} className={`w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent text-sm font-bold rounded-lg text-white transition shadow-md hover:shadow-lg ${loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-700 hover:bg-green-800'}`}>
-            {loading ? <Loader className="animate-spin" /> : isLogin ? "Sign In" : regStep === 1 ? "Send OTP" : regStep === 2 ? "Verify OTP" : "Create Account"} 
+          <button
+            type="submit"
+            disabled={loading}
+            className={`w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent text-sm font-bold rounded-lg text-white transition shadow-md hover:shadow-lg ${
+                loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-700 hover:bg-green-800'
+            }`}
+          >
+            {loading ? <Loader className="animate-spin" /> : 
+             isLogin ? "Sign In" : 
+             regStep === 1 ? "Send OTP" :
+             regStep === 2 ? "Verify OTP" :
+             "Create Account"
+            } 
             {!loading && <ArrowRight size={16} />}
           </button>
         </form>
 
+        {/* Footer Navigation */}
         <div className="text-center mt-4">
             <p className="text-sm text-gray-600">
                 {isLogin ? "Don't have an account? " : "Already have an account? "}
@@ -228,6 +304,7 @@ const Login = ({ onLogin }) => {
                 </button>
             </p>
             
+            {/* Go Back option for Registration steps */}
             {!isLogin && regStep > 1 && (
                 <button onClick={() => setRegStep(regStep - 1)} className="text-xs text-gray-500 hover:text-black mt-4 underline">
                     &larr; Go Back
