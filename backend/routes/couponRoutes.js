@@ -4,17 +4,21 @@ const Coupon = require('../models/Coupon');
 const { protect, admin } = require('../middleware/authMiddleware');
 const nodemailer = require('nodemailer'); 
 
-// --- UPDATED EMAIL CONFIG (SSL PORT 465) ---
+// --- UPDATED EMAIL CONFIG (PORT 587 + TIMEOUTS) ---
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
-  port: 465,
-  secure: true, 
+  port: 587,
+  secure: false,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
-  logger: true,
-  debug: true
+  tls: {
+    rejectUnauthorized: false
+  },
+  connectionTimeout: 10000,
+  greetingTimeout: 10000,
+  socketTimeout: 10000
 });
 
 router.post('/subscribe', async (req, res) => {
@@ -39,7 +43,7 @@ router.post('/subscribe', async (req, res) => {
   }
 });
 
-// ... Admin Routes (Create, Get, Delete) ...
+// ... Admin Routes ...
 router.post('/', protect, admin, async (req, res) => {
   try {
     const { code, discountPercentage } = req.body;

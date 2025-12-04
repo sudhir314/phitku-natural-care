@@ -5,18 +5,22 @@ const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
 const User = require('../models/User');
 
-// --- 1. EMAIL CONFIGURATION (UPDATED: SSL PORT 465) ---
+// --- 1. EMAIL CONFIGURATION (OPTIMIZED FOR RENDER) ---
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
-  port: 465, // Changed from 587 to 465
-  secure: true, // true for 465, false for other ports
+  port: 587, // Back to 587, it is more reliable for Render
+  secure: false, // Must be false for 587
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
-  // Debug logs to help if it fails again
-  logger: true,
-  debug: true 
+  tls: {
+    rejectUnauthorized: false // Fixes SSL issues on cloud
+  },
+  // --- FIX FOR TIMEOUTS ---
+  connectionTimeout: 10000, // Wait 10 seconds for connection
+  greetingTimeout: 10000,   // Wait 10 seconds for hello
+  socketTimeout: 10000      // Wait 10 seconds for data
 });
 
 // --- 2. HELPER FUNCTIONS ---
@@ -77,7 +81,7 @@ router.post('/register-init', async (req, res) => {
     res.status(200).json({ message: 'OTP sent successfully' });
 
   } catch (err) {
-    console.error("Register Init Error:", err); // Check Render Logs for details
+    console.error("Register Init Error:", err); 
     res.status(500).json({ message: 'Server Error: Could not send OTP. Check email settings.' });
   }
 });
