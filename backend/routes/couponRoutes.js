@@ -1,14 +1,16 @@
+// File: backend/routes/couponRoutes.js
+
 const express = require('express');
 const router = express.Router();
 const Coupon = require('../models/Coupon');
 const { protect, admin } = require('../middleware/authMiddleware');
 const nodemailer = require('nodemailer'); 
 
-// --- UPDATED EMAIL CONFIG (PORT 587 + TIMEOUTS) ---
+// --- UPDATED EMAIL CONFIG (PORT 465 FOR SSL) ---
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
-  port: 587,
-  secure: false,
+  port: 465, // CHANGED to 465
+  secure: true, // CHANGED to true
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
@@ -16,10 +18,13 @@ const transporter = nodemailer.createTransport({
   tls: {
     rejectUnauthorized: false
   },
-  connectionTimeout: 10000,
-  greetingTimeout: 10000,
-  socketTimeout: 10000
+  connectionTimeout: 20000,
+  greetingTimeout: 20000,
+  socketTimeout: 20000
 });
+
+// ... rest of the file remains the same ...
+// (Include your existing routes: /subscribe, /, /verify, etc.)
 
 router.post('/subscribe', async (req, res) => {
   const { email } = req.body;
@@ -43,7 +48,7 @@ router.post('/subscribe', async (req, res) => {
   }
 });
 
-// ... Admin Routes ...
+// ... keep other existing admin routes below ...
 router.post('/', protect, admin, async (req, res) => {
   try {
     const { code, discountPercentage } = req.body;

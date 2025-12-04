@@ -1,3 +1,5 @@
+// File: backend/routes/auth.js
+
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
@@ -5,25 +7,25 @@ const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
 const User = require('../models/User');
 
-// --- 1. EMAIL CONFIGURATION (OPTIMIZED FOR RENDER) ---
+// --- FIXED EMAIL CONFIGURATION (PORT 465 FOR SSL) ---
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
-  port: 587, // Back to 587, it is more reliable for Render
-  secure: false, // Must be false for 587
+  port: 465, // CHANGED: 465 is more reliable on cloud servers
+  secure: true, // CHANGED: Must be true for port 465
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
   tls: {
-    rejectUnauthorized: false // Fixes SSL issues on cloud
+    rejectUnauthorized: false // Fixes SSL handshake issues
   },
-  // --- FIX FOR TIMEOUTS ---
-  connectionTimeout: 10000, // Wait 10 seconds for connection
-  greetingTimeout: 10000,   // Wait 10 seconds for hello
-  socketTimeout: 10000      // Wait 10 seconds for data
+  // Increased timeouts to prevent early disconnection
+  connectionTimeout: 20000, // 20 seconds
+  greetingTimeout: 20000,   
+  socketTimeout: 20000      
 });
 
-// --- 2. HELPER FUNCTIONS ---
+// --- HELPER FUNCTIONS ---
 const generateAccessToken = (id, isAdmin) => {
   return jwt.sign({ id, isAdmin }, process.env.JWT_SECRET, { expiresIn: '15m' });
 };
