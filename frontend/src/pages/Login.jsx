@@ -9,7 +9,6 @@ const Login = ({ onLogin }) => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  // --- CHANGED: Renamed 'loginError' to 'authError' to use it for Register too ---
   const [authError, setAuthError] = useState(null);
 
   // --- REGISTRATION WIZARD STATE ---
@@ -124,9 +123,13 @@ const Login = ({ onLogin }) => {
         console.error("Auth Error:", error);
         const serverMessage = error.response?.data?.message;
         
-        // --- UPDATED: Set inline red error for both Login AND Register Step 1 ---
         if (isLogin || regStep === 1) {
             setAuthError(serverMessage || "An error occurred. Please try again.");
+            
+            // --- NEW: Clear form details on Login Error so user must re-enter everything ---
+            if (isLogin) {
+                setFormData(prev => ({ ...prev, email: '', password: '' }));
+            }
         } else {
             // For other steps (OTP/Password), keep using toast
             toast.error(serverMessage || error.message || "Something went wrong");
@@ -180,6 +183,7 @@ const Login = ({ onLogin }) => {
                                 : 'border-gray-200 focus:ring-green-500 focus:border-green-500'
                             }`}
                             onChange={handleChange} 
+                            value={formData.email} // Bind value to state to allow clearing
                         />
                     </div>
                     
@@ -196,6 +200,7 @@ const Login = ({ onLogin }) => {
                                 : 'border-gray-200 focus:ring-green-500 focus:border-green-500'
                             }`} 
                             onChange={handleChange} 
+                            value={formData.password} // Bind value to state to allow clearing
                         />
                     </div>
 
@@ -215,7 +220,7 @@ const Login = ({ onLogin }) => {
                 </>
             )}
 
-            {/* REGISTER: STEP 1 (Details) - UPDATED with Red Error Message */}
+            {/* REGISTER: STEP 1 (Details) */}
             {!isLogin && regStep === 1 && (
                 <div className="animate-in fade-in slide-in-from-right duration-300 space-y-4">
                     <div className="relative">
@@ -239,7 +244,7 @@ const Login = ({ onLogin }) => {
                         />
                     </div>
 
-                    {/* --- NEW: Error Message Display for Registration --- */}
+                    {/* Error Message Display for Registration */}
                     {authError && (
                         <div className="flex items-center gap-2 text-red-600 text-sm animate-in fade-in slide-in-from-top-1 bg-red-50 p-2 rounded-lg border border-red-100">
                             <AlertCircle size={16} />
