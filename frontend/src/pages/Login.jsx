@@ -9,8 +9,8 @@ const Login = ({ onLogin }) => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  // --- NEW: State to track login errors for the Red Line effect ---
-  const [loginError, setLoginError] = useState(null);
+  // --- CHANGED: Renamed 'loginError' to 'authError' to use it for Register too ---
+  const [authError, setAuthError] = useState(null);
 
   // --- REGISTRATION WIZARD STATE ---
   const [regStep, setRegStep] = useState(1); 
@@ -24,9 +24,8 @@ const Login = ({ onLogin }) => {
   });
 
   const handleChange = (e) => {
-    // --- NEW: Clear the red error line as soon as user types ---
-    if (isLogin) setLoginError(null);
-    
+    // Clear error as soon as user types
+    if (authError) setAuthError(null);
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
@@ -53,7 +52,7 @@ const Login = ({ onLogin }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setLoginError(null); // Reset error before new request
+    setAuthError(null); // Reset error before new request
 
     try {
         // ==========================
@@ -79,6 +78,7 @@ const Login = ({ onLogin }) => {
         if (regStep === 1) {
             if(!formData.name || !formData.email) throw new Error("Name and Email required");
             
+            // This call will return 400 if user exists, triggering the catch block
             await apiClient.post('/auth/register-init', {
                 name: formData.name, 
                 email: formData.email.toLowerCase().trim()
@@ -124,14 +124,11 @@ const Login = ({ onLogin }) => {
         console.error("Auth Error:", error);
         const serverMessage = error.response?.data?.message;
         
-        // --- NEW: Handle Login Specific Errors (Red Line Logic) ---
-        if (isLogin) {
-            setLoginError(serverMessage || "Invalid email or password");
-            // We do NOT show a toast for login errors anymore, strictly visual red line
-            // unless it's a connection error
-            if (!error.response) toast.error("Network error. Check connection.");
+        // --- UPDATED: Set inline red error for both Login AND Register Step 1 ---
+        if (isLogin || regStep === 1) {
+            setAuthError(serverMessage || "An error occurred. Please try again.");
         } else {
-            // Keep showing toasts for Registration errors
+            // For other steps (OTP/Password), keep using toast
             toast.error(serverMessage || error.message || "Something went wrong");
         }
     } finally {
@@ -171,14 +168,14 @@ const Login = ({ onLogin }) => {
             {isLogin && (
                 <>
                     <div className="relative">
-                        <Mail className={`absolute top-3 left-3 ${loginError ? 'text-red-400' : 'text-gray-400'}`} size={20} />
+                        <Mail className={`absolute top-3 left-3 ${authError ? 'text-red-400' : 'text-gray-400'}`} size={20} />
                         <input 
                             name="email" 
                             type="email" 
                             placeholder="Email Address" 
                             required 
                             className={`pl-10 w-full p-3 border rounded-lg outline-none transition-colors ${
-                                loginError 
+                                authError 
                                 ? 'border-red-500 text-red-900 focus:border-red-500 focus:ring-1 focus:ring-red-500 bg-red-50' 
                                 : 'border-gray-200 focus:ring-green-500 focus:border-green-500'
                             }`}
@@ -187,14 +184,14 @@ const Login = ({ onLogin }) => {
                     </div>
                     
                     <div className="relative">
-                        <Lock className={`absolute top-3 left-3 ${loginError ? 'text-red-400' : 'text-gray-400'}`} size={20} />
+                        <Lock className={`absolute top-3 left-3 ${authError ? 'text-red-400' : 'text-gray-400'}`} size={20} />
                         <input 
                             name="password" 
                             type="password" 
                             placeholder="Password" 
                             required 
                             className={`pl-10 w-full p-3 border rounded-lg outline-none transition-colors ${
-                                loginError 
+                                authError 
                                 ? 'border-red-500 text-red-900 focus:border-red-500 focus:ring-1 focus:ring-red-500 bg-red-50' 
                                 : 'border-gray-200 focus:ring-green-500 focus:border-green-500'
                             }`} 
@@ -202,11 +199,11 @@ const Login = ({ onLogin }) => {
                         />
                     </div>
 
-                    {/* --- NEW: Display Error Message Below Input --- */}
-                    {loginError && (
+                    {/* Error Message Display for Login */}
+                    {authError && (
                         <div className="flex items-center gap-2 text-red-600 text-sm animate-in fade-in slide-in-from-top-1">
                             <AlertCircle size={16} />
-                            <span>{loginError}</span>
+                            <span>{authError}</span>
                         </div>
                     )}
                     
@@ -218,7 +215,7 @@ const Login = ({ onLogin }) => {
                 </>
             )}
 
-            {/* REGISTER: STEP 1 (Details) */}
+            {/* REGISTER: STEP 1 (Details) - UPDATED with Red Error Message */}
             {!isLogin && regStep === 1 && (
                 <div className="animate-in fade-in slide-in-from-right duration-300 space-y-4">
                     <div className="relative">
@@ -226,9 +223,29 @@ const Login = ({ onLogin }) => {
                         <input name="name" type="text" placeholder="Full Name" required className="pl-10 w-full p-3 border rounded-lg focus:ring-green-500 outline-none" onChange={handleChange} value={formData.name} />
                     </div>
                     <div className="relative">
-                        <Mail className="absolute top-3 left-3 text-gray-400" size={20} />
-                        <input name="email" type="email" placeholder="Email Address" required className="pl-10 w-full p-3 border rounded-lg focus:ring-green-500 outline-none" onChange={handleChange} value={formData.email} />
+                        <Mail className={`absolute top-3 left-3 ${authError ? 'text-red-400' : 'text-gray-400'}`} size={20} />
+                        <input 
+                            name="email" 
+                            type="email" 
+                            placeholder="Email Address" 
+                            required 
+                            className={`pl-10 w-full p-3 border rounded-lg outline-none transition-colors ${
+                                authError 
+                                ? 'border-red-500 text-red-900 focus:border-red-500 focus:ring-1 focus:ring-red-500 bg-red-50' 
+                                : 'border-gray-200 focus:ring-green-500 focus:border-green-500'
+                            }`} 
+                            onChange={handleChange} 
+                            value={formData.email} 
+                        />
                     </div>
+
+                    {/* --- NEW: Error Message Display for Registration --- */}
+                    {authError && (
+                        <div className="flex items-center gap-2 text-red-600 text-sm animate-in fade-in slide-in-from-top-1 bg-red-50 p-2 rounded-lg border border-red-100">
+                            <AlertCircle size={16} />
+                            <span>{authError}</span>
+                        </div>
+                    )}
                 </div>
             )}
 
@@ -325,7 +342,7 @@ const Login = ({ onLogin }) => {
         <div className="text-center mt-4">
             <p className="text-sm text-gray-600">
                 {isLogin ? "Don't have an account? " : "Already have an account? "}
-                <button onClick={() => { setIsLogin(!isLogin); setRegStep(1); setLoginError(null); setFormData({name:'', email:'', password:'', confirmPassword:'', otp:''}); }} className="font-bold text-green-700 hover:underline">
+                <button onClick={() => { setIsLogin(!isLogin); setRegStep(1); setAuthError(null); setFormData({name:'', email:'', password:'', confirmPassword:'', otp:''}); }} className="font-bold text-green-700 hover:underline">
                     {isLogin ? "Register Now" : "Login Here"}
                 </button>
             </p>
