@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Mail, Lock, User, ArrowRight, Loader, KeyRound, CheckCircle, ShieldAlert, RefreshCw } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, Loader, KeyRound, CheckCircle, ShieldAlert, RefreshCw, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import apiClient from '../api/apiClient';
 
@@ -9,8 +9,10 @@ const Login = ({ onLogin }) => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  // --- NEW: State to track login errors for the Red Line effect ---
+  const [loginError, setLoginError] = useState(null);
+
   // --- REGISTRATION WIZARD STATE ---
-  // Step 1: Details (Name, Email) -> Step 2: OTP -> Step 3: Password
   const [regStep, setRegStep] = useState(1); 
 
   const [formData, setFormData] = useState({
@@ -22,12 +24,14 @@ const Login = ({ onLogin }) => {
   });
 
   const handleChange = (e) => {
+    // --- NEW: Clear the red error line as soon as user types ---
+    if (isLogin) setLoginError(null);
+    
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   // --- VALIDATION HELPER: Strong Password ---
   const validatePasswordStrength = (password) => {
-    // Regex: Minimum 8 chars, at least one letter and one number
     const strongPasswordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/;
     return strongPasswordRegex.test(password);
   };
@@ -49,6 +53,7 @@ const Login = ({ onLogin }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setLoginError(null); // Reset error before new request
 
     try {
         // ==========================
@@ -71,7 +76,6 @@ const Login = ({ onLogin }) => {
         // FLOW 2: REGISTRATION
         // ==========================
         
-        // --- Step 1: Send OTP ---
         if (regStep === 1) {
             if(!formData.name || !formData.email) throw new Error("Name and Email required");
             
@@ -81,14 +85,10 @@ const Login = ({ onLogin }) => {
             });
             
             toast.success(`OTP sent to ${formData.email}`);
-            setRegStep(2); // Move to OTP step
+            setRegStep(2); 
         }
-
-        // --- Step 2: Verify OTP ---
         else if (regStep === 2) {
             if(!formData.otp) throw new Error("Please enter the OTP");
-            
-            // FIX: Trim the OTP to remove accidental spaces
             const cleanOTP = formData.otp.trim();
 
             await apiClient.post('/auth/verify-otp', {
@@ -97,29 +97,20 @@ const Login = ({ onLogin }) => {
             });
             
             toast.success("OTP Verified! Now set your password.");
-            setRegStep(3); // Move to Password step
+            setRegStep(3); 
         }
-
-        // --- Step 3: Set Password & Finalize ---
         else if (regStep === 3) {
-            // 1. Check for empty fields
             if(!formData.password || !formData.confirmPassword) {
                 throw new Error("Please fill both password fields");
             }
-
-            // 2. Strict Match Check
             if(formData.password !== formData.confirmPassword) {
-                // Clear passwords to force re-entry
                 setFormData(prev => ({ ...prev, password: '', confirmPassword: '' }));
                 throw new Error("Passwords do not match!");
             }
-
-            // 3. Strong Password Check
             if (!validatePasswordStrength(formData.password)) {
                 throw new Error("Password is weak! Use 8+ chars with letters & numbers.");
             }
 
-            // 4. Finalize
             const { data } = await apiClient.post('/auth/register-finalize', {
                 email: formData.email.toLowerCase().trim(), 
                 otp: formData.otp.trim(), 
@@ -131,9 +122,18 @@ const Login = ({ onLogin }) => {
 
     } catch (error) {
         console.error("Auth Error:", error);
-        // Extract exact error message from backend (e.g., "Invalid OTP")
         const serverMessage = error.response?.data?.message;
-        toast.error(serverMessage || error.message || "Something went wrong");
+        
+        // --- NEW: Handle Login Specific Errors (Red Line Logic) ---
+        if (isLogin) {
+            setLoginError(serverMessage || "Invalid email or password");
+            // We do NOT show a toast for login errors anymore, strictly visual red line
+            // unless it's a connection error
+            if (!error.response) toast.error("Network error. Check connection.");
+        } else {
+            // Keep showing toasts for Registration errors
+            toast.error(serverMessage || error.message || "Something went wrong");
+        }
     } finally {
         setLoading(false);
     }
@@ -151,7 +151,6 @@ const Login = ({ onLogin }) => {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-2xl shadow-xl">
         
-        {/* Header */}
         <div className="text-center">
           <h2 className="text-3xl font-extrabold text-gray-900">
             {isLogin ? 'Welcome Back' : 'Create Account'}
@@ -172,15 +171,45 @@ const Login = ({ onLogin }) => {
             {isLogin && (
                 <>
                     <div className="relative">
-                        <Mail className="absolute top-3 left-3 text-gray-400" size={20} />
-                        <input name="email" type="email" placeholder="Email Address" required className="pl-10 w-full p-3 border rounded-lg focus:ring-green-500 outline-none" onChange={handleChange} />
-                    </div>
-                    <div className="relative">
-                        <Lock className="absolute top-3 left-3 text-gray-400" size={20} />
-                        <input name="password" type="password" placeholder="Password" required className="pl-10 w-full p-3 border rounded-lg focus:ring-green-500 outline-none" onChange={handleChange} />
+                        <Mail className={`absolute top-3 left-3 ${loginError ? 'text-red-400' : 'text-gray-400'}`} size={20} />
+                        <input 
+                            name="email" 
+                            type="email" 
+                            placeholder="Email Address" 
+                            required 
+                            className={`pl-10 w-full p-3 border rounded-lg outline-none transition-colors ${
+                                loginError 
+                                ? 'border-red-500 text-red-900 focus:border-red-500 focus:ring-1 focus:ring-red-500 bg-red-50' 
+                                : 'border-gray-200 focus:ring-green-500 focus:border-green-500'
+                            }`}
+                            onChange={handleChange} 
+                        />
                     </div>
                     
-                    {/* --- FIX: Changed 'class' to 'className' here --- */}
+                    <div className="relative">
+                        <Lock className={`absolute top-3 left-3 ${loginError ? 'text-red-400' : 'text-gray-400'}`} size={20} />
+                        <input 
+                            name="password" 
+                            type="password" 
+                            placeholder="Password" 
+                            required 
+                            className={`pl-10 w-full p-3 border rounded-lg outline-none transition-colors ${
+                                loginError 
+                                ? 'border-red-500 text-red-900 focus:border-red-500 focus:ring-1 focus:ring-red-500 bg-red-50' 
+                                : 'border-gray-200 focus:ring-green-500 focus:border-green-500'
+                            }`} 
+                            onChange={handleChange} 
+                        />
+                    </div>
+
+                    {/* --- NEW: Display Error Message Below Input --- */}
+                    {loginError && (
+                        <div className="flex items-center gap-2 text-red-600 text-sm animate-in fade-in slide-in-from-top-1">
+                            <AlertCircle size={16} />
+                            <span>{loginError}</span>
+                        </div>
+                    )}
+                    
                     <div className="text-right">
                         <Link to="/forgot-password" className="text-xs font-medium text-green-600 hover:text-green-500">
                             Forgot Password?
@@ -232,7 +261,6 @@ const Login = ({ onLogin }) => {
                         <CheckCircle size={16} /> Email Verified! Set Password.
                      </div>
                      
-                     {/* Password Policy Hint */}
                      <div className="text-xs text-gray-500 flex gap-2 items-start">
                         <ShieldAlert size={14} className="text-gray-400 mt-0.5 shrink-0" />
                         <span>Password must be 8+ chars and include at least one letter and number.</span>
@@ -267,7 +295,6 @@ const Login = ({ onLogin }) => {
                         />
                     </div>
                     
-                    {/* Live Error Message */}
                     {formData.confirmPassword && formData.password !== formData.confirmPassword && (
                         <p className="text-xs text-red-500 font-bold text-center animate-pulse">
                             Passwords do not match!
@@ -295,16 +322,14 @@ const Login = ({ onLogin }) => {
           </button>
         </form>
 
-        {/* Footer Navigation */}
         <div className="text-center mt-4">
             <p className="text-sm text-gray-600">
                 {isLogin ? "Don't have an account? " : "Already have an account? "}
-                <button onClick={() => { setIsLogin(!isLogin); setRegStep(1); setFormData({name:'', email:'', password:'', confirmPassword:'', otp:''}); }} className="font-bold text-green-700 hover:underline">
+                <button onClick={() => { setIsLogin(!isLogin); setRegStep(1); setLoginError(null); setFormData({name:'', email:'', password:'', confirmPassword:'', otp:''}); }} className="font-bold text-green-700 hover:underline">
                     {isLogin ? "Register Now" : "Login Here"}
                 </button>
             </p>
             
-            {/* Go Back option for Registration steps */}
             {!isLogin && regStep > 1 && (
                 <button onClick={() => setRegStep(regStep - 1)} className="text-xs text-gray-500 hover:text-black mt-4 underline">
                     &larr; Go Back
