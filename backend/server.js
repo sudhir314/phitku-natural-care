@@ -14,8 +14,12 @@ app.use(cors({
         'http://localhost:3000', 
         'http://127.0.0.1:3000',
         'https://sudhir314.github.io', 
+        // Allow HTTPS (Secure)
         'https://www.solvewithsudhir.in',
         'https://solvewithsudhir.in',
+        // Allow HTTP (Insecure - Needed while DNS propagates)
+        'http://www.solvewithsudhir.in',
+        'http://solvewithsudhir.in',
         process.env.CLIENT_URL
     ].filter(Boolean), 
     credentials: true,
@@ -37,13 +41,13 @@ const authRoutes = require('./routes/auth');
 const productRoutes = require('./routes/productRoutes'); 
 const orderRoutes = require('./routes/orderRoutes');     
 const couponRoutes = require('./routes/couponRoutes'); 
-const adminRoutes = require('./routes/adminRoutes'); // --- NEW IMPORT ---
+const adminRoutes = require('./routes/adminRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/coupons', couponRoutes);
-app.use('/api/admin', adminRoutes); // --- NEW ROUTE MOUNT ---
+app.use('/api/admin', adminRoutes);
 
 // --- 5. START SERVER ---
 const PORT = process.env.PORT || 5000;
