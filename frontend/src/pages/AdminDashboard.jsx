@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Package, Truck, Plus, Edit, Trash2, X, Menu, TicketPercent, BarChart2, Users, DollarSign } from 'lucide-react';
+import { Package, Truck, Plus, Edit, Trash2, X, Menu, TicketPercent, BarChart2, Users, DollarSign, Eye, MapPin } from 'lucide-react';
 import apiClient from '../api/apiClient';
 import toast from 'react-hot-toast';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
@@ -8,7 +8,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
 const AdminDashboard = () => {
-  const [activeTab, setActiveTab] = useState('analytics'); // Default to Analytics
+  const [activeTab, setActiveTab] = useState('analytics');
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
   const [coupons, setCoupons] = useState([]);
@@ -18,9 +18,10 @@ const AdminDashboard = () => {
   // Mobile Sidebar State
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  // Modal State
+  // Modals State
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [viewingOrder, setViewingOrder] = useState(null); // <--- NEW: To store the order being viewed
   
   // Product Form State
   const [formData, setFormData] = useState({
@@ -301,12 +302,19 @@ const AdminDashboard = () => {
                     </div>
                 )}
 
-                {/* ORDERS TAB */}
+                {/* ORDERS TAB (UPDATED) */}
                 {activeTab === 'orders' && (
                     <div className="bg-white rounded-xl shadow-sm overflow-x-auto">
                         <table className="w-full text-left min-w-[700px]">
                             <thead className="bg-gray-100 border-b">
-                                <tr><th className="p-4">Order ID</th><th className="p-4">Customer</th><th className="p-4">Total</th><th className="p-4">Status</th><th className="p-4">Action</th></tr>
+                                <tr>
+                                    <th className="p-4">Order ID</th>
+                                    <th className="p-4">Customer</th>
+                                    <th className="p-4">Total</th>
+                                    <th className="p-4">Status</th>
+                                    <th className="p-4">Action</th>
+                                    <th className="p-4">Details</th> {/* Added Column */}
+                                </tr>
                             </thead>
                             <tbody>
                                 {orders.map(order => (
@@ -317,8 +325,14 @@ const AdminDashboard = () => {
                                         <td className="p-4"><span className="px-2 py-1 rounded-full text-xs bg-yellow-100 text-yellow-800">{order.status}</span></td>
                                         <td className="p-4">
                                             <select className="border rounded px-2 py-1 text-sm" value={order.status} onChange={(e) => updateOrderStatus(order._id, e.target.value)}>
-                                                <option value="Pending">Pending</option><option value="Shipped">Shipped</option><option value="Delivered">Delivered</option>
+                                                <option value="Processing">Processing</option><option value="Shipped">Shipped</option><option value="Delivered">Delivered</option><option value="Cancelled">Cancelled</option>
                                             </select>
+                                        </td>
+                                        {/* NEW VIEW BUTTON */}
+                                        <td className="p-4">
+                                            <button onClick={() => setViewingOrder(order)} className="text-green-600 hover:bg-green-50 p-2 rounded-full transition">
+                                                <Eye size={20}/>
+                                            </button>
                                         </td>
                                     </tr>
                                 ))}
@@ -379,7 +393,9 @@ const AdminDashboard = () => {
          )}
       </div>
 
-      {/* Product Modal */}
+      {/* --- MODALS --- */}
+
+      {/* 1. Product Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] p-6 overflow-y-auto">
@@ -407,6 +423,73 @@ const AdminDashboard = () => {
             </div>
         </div>
       )}
+
+      {/* 2. ORDER DETAILS MODAL (NEW) */}
+      {viewingOrder && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] p-6 overflow-y-auto animate-in fade-in zoom-in duration-200">
+                <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-xl font-bold flex items-center gap-2">
+                        <Package className="text-green-700"/> Order #{viewingOrder._id.slice(-6)}
+                    </h2>
+                    <button onClick={() => setViewingOrder(null)} className="p-1 hover:bg-gray-100 rounded-full"><X size={24}/></button>
+                </div>
+                
+                <div className="space-y-6">
+                    {/* Shipping Address Section */}
+                    <div className="bg-gray-50 p-5 rounded-xl border border-gray-100">
+                        <h3 className="font-bold text-gray-700 mb-4 flex items-center gap-2 text-sm uppercase tracking-wider">
+                             <MapPin size={16}/> Delivery Address
+                        </h3>
+                        <div className="space-y-1">
+                            <p className="font-bold text-lg text-gray-900">{viewingOrder.shippingAddress?.fullName || 'N/A'}</p>
+                            <p className="text-gray-700">{viewingOrder.shippingAddress?.address || 'No Address Provided'}</p>
+                            <p className="text-gray-700">{viewingOrder.shippingAddress?.city} - {viewingOrder.shippingAddress?.pincode}</p>
+                        </div>
+                        <div className="mt-4 pt-4 border-t border-gray-200 grid grid-cols-1 gap-2">
+                            <p className="text-sm text-gray-600 flex items-center gap-2">
+                                <span className="font-semibold w-16">Phone:</span> 
+                                <a href={`tel:${viewingOrder.shippingAddress?.phone}`} className="text-blue-600 hover:underline">{viewingOrder.shippingAddress?.phone}</a>
+                            </p>
+                            <p className="text-sm text-gray-600 flex items-center gap-2">
+                                <span className="font-semibold w-16">Email:</span> 
+                                <a href={`mailto:${viewingOrder.shippingAddress?.email}`} className="text-blue-600 hover:underline">{viewingOrder.shippingAddress?.email}</a>
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Order Items Section */}
+                    <div>
+                        <h3 className="font-bold text-gray-700 mb-3 text-sm uppercase tracking-wider">Items Ordered</h3>
+                        <div className="space-y-3">
+                            {viewingOrder.items?.map((item, idx) => (
+                                <div key={idx} className="flex justify-between items-center text-sm border-b border-gray-100 pb-3 last:border-0">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 bg-gray-200 rounded-lg flex items-center justify-center text-xs font-bold text-gray-500">
+                                            {item.quantity}x
+                                        </div>
+                                        <span className="font-medium text-gray-800">{item.name}</span>
+                                    </div>
+                                    <span className="font-bold text-gray-900">₹{item.price * item.quantity}</span>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="flex justify-between font-bold text-xl mt-4 pt-4 border-t border-gray-200">
+                            <span>Total Amount</span>
+                            <span className="text-green-700">₹{viewingOrder.totalPrice}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="mt-8">
+                    <button onClick={() => setViewingOrder(null)} className="w-full bg-black text-white py-3.5 rounded-xl font-bold hover:bg-gray-800 transition shadow-lg">
+                        Close Details
+                    </button>
+                </div>
+            </div>
+        </div>
+      )}
+
     </div>
   );
 };

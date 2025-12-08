@@ -126,12 +126,11 @@ const Login = ({ onLogin }) => {
         if (isLogin || regStep === 1) {
             setAuthError(serverMessage || "An error occurred. Please try again.");
             
-            // --- NEW: Clear form details on Login Error so user must re-enter everything ---
+            // --- CRITICAL FIX: Clear form details on Login Error ---
             if (isLogin) {
                 setFormData(prev => ({ ...prev, email: '', password: '' }));
             }
         } else {
-            // For other steps (OTP/Password), keep using toast
             toast.error(serverMessage || error.message || "Something went wrong");
         }
     } finally {
@@ -172,6 +171,7 @@ const Login = ({ onLogin }) => {
                 <>
                     <div className="relative">
                         <Mail className={`absolute top-3 left-3 ${authError ? 'text-red-400' : 'text-gray-400'}`} size={20} />
+                        {/* INPUT FIX: Added value={formData.email} below */}
                         <input 
                             name="email" 
                             type="email" 
@@ -183,12 +183,13 @@ const Login = ({ onLogin }) => {
                                 : 'border-gray-200 focus:ring-green-500 focus:border-green-500'
                             }`}
                             onChange={handleChange} 
-                            value={formData.email} // Bind value to state to allow clearing
+                            value={formData.email} 
                         />
                     </div>
                     
                     <div className="relative">
                         <Lock className={`absolute top-3 left-3 ${authError ? 'text-red-400' : 'text-gray-400'}`} size={20} />
+                         {/* INPUT FIX: Added value={formData.password} below */}
                         <input 
                             name="password" 
                             type="password" 
@@ -200,7 +201,7 @@ const Login = ({ onLogin }) => {
                                 : 'border-gray-200 focus:ring-green-500 focus:border-green-500'
                             }`} 
                             onChange={handleChange} 
-                            value={formData.password} // Bind value to state to allow clearing
+                            value={formData.password} 
                         />
                     </div>
 
@@ -244,7 +245,6 @@ const Login = ({ onLogin }) => {
                         />
                     </div>
 
-                    {/* Error Message Display for Registration */}
                     {authError && (
                         <div className="flex items-center gap-2 text-red-600 text-sm animate-in fade-in slide-in-from-top-1 bg-red-50 p-2 rounded-lg border border-red-100">
                             <AlertCircle size={16} />
