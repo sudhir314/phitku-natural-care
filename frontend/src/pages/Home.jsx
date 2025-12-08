@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ArrowRight, Star, ShieldCheck, Leaf, Heart, Droplet, Award, Zap } from 'lucide-react';
 import apiClient from '../api/apiClient'; 
 
-import founderImg from '../assets/founder.webp';
+// import founderImg from '../assets/founder.webp';
 import actionImg from '../assets/action.webp';
 import blog1Img from '../assets/blog1.webp'; 
 import blog2Img from '../assets/blog2.webp';
@@ -172,11 +172,11 @@ const Home = ({ addToCart }) => {
       {/* 4. WHY PHITKU */}
       <div className="py-12 bg-gray-50">
           <div className="container mx-auto px-4 text-center max-w-3xl">
-              <h2 className="text-2xl md:text-3xl font-bold mb-4">Why Phitku?</h2>
+              {/* <h2 className="text-2xl md:text-3xl font-bold mb-4">Why Phitku?</h2> */}
               <p className="text-gray-600 mb-6 text-lg md:text-xl leading-relaxed font-light">
                   Our mission is to make <span className="text-black font-medium">100% natural, gentle, and affordable skincare</span> accessible to everyone.
               </p>
-              <Link to="/story" className="text-green-700 font-bold hover:underline">Read Our Story</Link>
+              {/* <Link to="/story" className="text-green-700 font-bold hover:underline">Read Our Story</Link> */}
           </div>
       </div>
 
@@ -205,7 +205,7 @@ const Home = ({ addToCart }) => {
           </div>
         </div>
 
-      {/* 6. FOUNDER'S NOTE */}
+      {/* 6. FOUNDER'S NOTE
       <div className="py-16 bg-gray-50">
           <div className="container mx-auto px-4 max-w-5xl flex flex-col-reverse md:flex-row gap-10 items-center">
               <div className="md:w-1/3 w-full relative px-6 md:px-0">
@@ -223,7 +223,7 @@ const Home = ({ addToCart }) => {
                   </div>
               </div>
           </div>
-        </div>
+        </div> */}
 
       {/* 7. BLOGS SECTION */}
       <div className="py-16 bg-white">

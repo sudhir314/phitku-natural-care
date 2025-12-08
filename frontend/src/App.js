@@ -4,7 +4,7 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer'; 
 import Home from './pages/Home';
 import Shop from './pages/Shop';
-import Story from './pages/Story';
+// import Story from './pages/Story';
 import Ingredients from './pages/Ingredients';
 import Login from './pages/Login';
 import ForgotPassword from './pages/ForgotPassword'; 
@@ -130,7 +130,7 @@ function App() {
             <Route path="/shop" element={<Shop addToCart={addToCart} />} />
             <Route path="/product/:id" element={<ProductDetails addToCart={addToCart} />} />
             
-            <Route path="/story" element={<Story />} />
+            {/* <Route path="/story" element={<Story />} /> */}
             <Route path="/ingredients" element={<Ingredients />} />
             <Route path="/login" element={<Login onLogin={handleLogin} />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />

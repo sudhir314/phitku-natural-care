@@ -41,7 +41,7 @@ const Navbar = ({ cartCount = 0, user, onLogout }) => {
       
       {/* Announcement Bar */}
       <div className="bg-black text-white text-[10px] md:text-xs py-1.5 px-4 flex justify-center items-center tracking-wide">
-        <span className="font-medium text-center truncate">Free Shipping on All Orders Above ₹999 | Use Code: PHITKU10</span>
+        <span className="font-medium text-center truncate">Free Shipping on All Orders Above ₹999 | Use Code: Natural10</span>
       </div>
 
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
@@ -53,7 +53,7 @@ const Navbar = ({ cartCount = 0, user, onLogout }) => {
 
         {/* Logo */}
         <Link to="/" className="text-center lg:text-left flex flex-col items-center lg:items-start group">
-          <h1 className="text-2xl md:text-3xl font-medium tracking-wide text-gray-900 leading-none group-hover:text-green-800 transition">Phitku</h1>
+          <h1 className="text-2xl md:text-3xl font-medium tracking-wide text-gray-900 leading-none group-hover:text-green-800 transition">Natural Living</h1>
           <p className="text-[0.6rem] tracking-[0.25em] text-gray-500 uppercase font-light mt-0.5">NATURAL CRYSTAL CARE</p>
         </Link>
 
@@ -61,7 +61,7 @@ const Navbar = ({ cartCount = 0, user, onLogout }) => {
         <div className="hidden lg:flex items-center gap-8 text-sm font-medium text-gray-700"> 
           <Link to="/" className="hover:text-green-700 transition relative group">Home</Link>
           <Link to="/shop" className="hover:text-green-700 transition relative group">Shop Now</Link>
-          <Link to="/story" className="hover:text-green-700 transition relative group">Our Story</Link>
+          {/* <Link to="/story" className="hover:text-green-700 transition relative group">Our Story</Link> */}
           <Link to="/ingredients" className="hover:text-green-700 transition relative group">Ingredients</Link>
           
           {/* NEW: My Orders Link (Only visible if logged in) */}
@@ -135,7 +135,7 @@ const Navbar = ({ cartCount = 0, user, onLogout }) => {
         <div className="lg:hidden bg-white border-t border-gray-100 p-4 flex flex-col gap-3 text-sm font-medium shadow-xl absolute w-full left-0 z-50 animate-in slide-in-from-top-2">
           <Link to="/" onClick={() => setIsOpen(false)} className="py-2 border-b border-gray-50">Home</Link>
           <Link to="/shop" onClick={() => setIsOpen(false)} className="py-2 border-b border-gray-50">Shop Now</Link>
-          <Link to="/story" onClick={() => setIsOpen(false)} className="py-2 border-b border-gray-50">Our Story</Link>
+          {/* <Link to="/story" onClick={() => setIsOpen(false)} className="py-2 border-b border-gray-50">Our Story</Link> */}
           <Link to="/ingredients" onClick={() => setIsOpen(false)} className="py-2 border-b border-gray-50">Ingredients</Link>
           
           {/* NEW: Mobile My Orders Link */}
