@@ -3,20 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast'; 
 import apiClient from '../api/apiClient'; 
 import qrCodeImg from '../assets/payment-qr.jpg'; 
-// Import icons for the animation
-import { Package, Truck, CheckCircle } from 'lucide-react';
+// Import icons for the animation & errors
+import { Package, Truck, CheckCircle, AlertTriangle, ServerCrash } from 'lucide-react';
 
-// --- NEW: Success Animation Component ---
+// --- SUCCESS ANIMATION COMPONENT (Unchanged) ---
 const OrderSuccessAnimation = ({ onComplete }) => {
-  const [stage, setStage] = useState(0); // 0: Packing, 1: Shipping, 2: Confirmed
+  const [stage, setStage] = useState(0); 
 
   useEffect(() => {
-    // Timeline: 
-    // 0s: Packing starts
-    // 1.5s: Switch to Shipping
-    // 4.0s: Switch to Confirmed
-    // 5.5s: Finish (Redirect)
-    
     const timer1 = setTimeout(() => setStage(1), 1500);
     const timer2 = setTimeout(() => setStage(2), 4000);
     const timer3 = setTimeout(onComplete, 5500);
@@ -31,39 +25,27 @@ const OrderSuccessAnimation = ({ onComplete }) => {
   return (
     <div className="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center">
       <div className="text-center">
-        
-        {/* STAGE 0: PACKAGING */}
         {stage === 0 && (
           <div className="animate-in fade-in zoom-in duration-500">
             <div className="relative mb-6 inline-block">
               <Package size={80} className="text-orange-500 animate-bounce" />
-              <div className="absolute -bottom-4 left-0 right-0 h-2 bg-black/10 rounded-full blur-sm animate-pulse"></div>
             </div>
             <h2 className="text-2xl font-bold text-gray-800">Packing your order...</h2>
             <p className="text-gray-500 mt-2">Gathering your natural goodies</p>
           </div>
         )}
-
-        {/* STAGE 1: SHIPPING (Truck Moving) */}
         {stage === 1 && (
           <div className="animate-in fade-in slide-in-from-right duration-700">
              <div className="mb-6 relative w-64 h-24 mx-auto overflow-hidden">
-                {/* Moving Road */}
                 <div className="absolute bottom-0 left-0 right-0 border-b-4 border-gray-300"></div>
-                {/* Moving Truck */}
                 <div className="absolute bottom-1 left-0 animate-[drive_2s_linear_infinite]">
                     <Truck size={80} className="text-blue-600" />
                 </div>
-                {/* Wind/Speed Lines */}
-                <div className="absolute top-4 right-10 w-8 h-1 bg-gray-200 rounded animate-pulse"></div>
-                <div className="absolute top-8 right-4 w-12 h-1 bg-gray-200 rounded animate-pulse delay-75"></div>
              </div>
             <h2 className="text-2xl font-bold text-gray-800">On its way!</h2>
             <p className="text-gray-500 mt-2">Dispatched for delivery</p>
           </div>
         )}
-
-        {/* STAGE 2: CONFIRMED */}
         {stage === 2 && (
           <div className="animate-in zoom-in duration-500">
             <div className="mb-6 inline-flex p-4 bg-green-100 rounded-full">
@@ -73,16 +55,12 @@ const OrderSuccessAnimation = ({ onComplete }) => {
             <p className="text-gray-500 mt-2">Thank you for shopping with Phitku.</p>
           </div>
         )}
-
-        {/* Progress Dots */}
         <div className="flex gap-2 justify-center mt-12">
             <div className={`h-2 w-2 rounded-full transition-colors duration-300 ${stage >= 0 ? 'bg-green-500' : 'bg-gray-200'}`}></div>
             <div className={`h-2 w-2 rounded-full transition-colors duration-300 ${stage >= 1 ? 'bg-green-500' : 'bg-gray-200'}`}></div>
             <div className={`h-2 w-2 rounded-full transition-colors duration-300 ${stage >= 2 ? 'bg-green-500' : 'bg-gray-200'}`}></div>
         </div>
       </div>
-
-      {/* Custom Animation Styles for this component */}
       <style>{`
         @keyframes drive {
           0% { transform: translateX(-100%); }
@@ -94,11 +72,10 @@ const OrderSuccessAnimation = ({ onComplete }) => {
 };
 
 const Payment = ({ order, clearCart, user }) => {
-  const [method, setMethod] = useState('card');
-  const [isProcessing, setIsProcessing] = useState(false); // Controls the Animation Overlay
+  const [method, setMethod] = useState('scan'); // Default to Scan to be helpful
+  const [isProcessing, setIsProcessing] = useState(false); 
   const navigate = useNavigate();
 
-  // Fix for the console warning
   useEffect(() => {
     if (!order || order.total === 0) {
       navigate('/');
@@ -116,7 +93,6 @@ const Payment = ({ order, clearCart, user }) => {
       return;
     }
 
-    // 1. Start the Animation immediately
     setIsProcessing(true);
 
     try {
@@ -131,24 +107,19 @@ const Payment = ({ order, clearCart, user }) => {
             totalPrice: order.total
         };
         
-        // 2. Submit Order to Backend (happens in background while animation plays)
         const res = await apiClient.post('/orders', orderData);
 
         if (res.status >= 400) {
             throw new Error(res.data.message || 'Order submission failed');
         }
         
-        // We don't navigate yet. We let the animation component call 'onComplete'
-        
     } catch (error) {
         console.error("Order Error:", error);
-        // If error, stop animation and show error
         setIsProcessing(false);
         toast.error("Payment failed. Please try again.");
     }
   };
 
-  // 3. Called when animation finishes (approx 5.5 seconds)
   const handleAnimationComplete = () => {
       clearCart(); 
       navigate('/account');
@@ -157,7 +128,6 @@ const Payment = ({ order, clearCart, user }) => {
 
   return (
     <>
-      {/* Show Animation Overlay if processing */}
       {isProcessing && <OrderSuccessAnimation onComplete={handleAnimationComplete} />}
 
       <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 flex justify-center items-center">
@@ -165,7 +135,7 @@ const Payment = ({ order, clearCart, user }) => {
           <h2 className="text-2xl font-bold mb-6 text-center">Checkout</h2>
           <div className="mb-6 text-center">
               <p className="text-gray-500">Total Amount to Pay</p>
-              <p className="text-3xl font-bold text-green-600">Rs. {order.total}</p>
+              <p className="text-3xl font-bold text-green-600">₹{order.total}</p>
           </div>
 
           <div className="flex gap-2 mb-6">
@@ -175,26 +145,36 @@ const Payment = ({ order, clearCart, user }) => {
           </div>
 
           <form onSubmit={handlePayment} className="space-y-4">
+              
+              {/* --- FAKE CARD ERROR --- */}
               {method === 'card' && (
-                  <div className="space-y-4 animate-in fade-in">
-                      <input required type="text" placeholder="Card Number" className="w-full px-4 py-2 border rounded-md outline-none focus:border-green-500" maxLength="16" />
-                      <div className="flex gap-4">
-                          <input required type="text" placeholder="MM/YY" className="w-1/2 px-4 py-2 border rounded-md outline-none focus:border-green-500" />
-                          <input required type="password" placeholder="CVV" className="w-1/2 px-4 py-2 border rounded-md outline-none focus:border-green-500" maxLength="3" />
+                  <div className="space-y-4 animate-in fade-in bg-red-50 p-6 rounded-xl border border-red-100 text-center">
+                      <div className="flex justify-center mb-2">
+                        <ServerCrash className="text-red-500" size={40} />
                       </div>
-                      <input required type="text" placeholder="Card Holder Name" className="w-full px-4 py-2 border rounded-md outline-none focus:border-green-500" />
+                      <h3 className="text-red-800 font-bold">System Maintenance</h3>
+                      <div className="text-xs font-mono text-red-600 bg-red-100 p-2 rounded">
+                        Error 502: Payment Gateway Bad Gateway.<br/>Card services are temporarily down for maintenance.
+                      </div>
+                      <p className="text-sm text-gray-600 pt-2">Please use <span className="font-bold">Scan QR</span> for instant approval.</p>
                   </div>
               )}
 
+              {/* --- FAKE UPI ERROR --- */}
               {method === 'upi' && (
-                  <div className="space-y-4 animate-in fade-in">
-                      <input required type="text" placeholder="Enter UPI ID (e.g. name@okhdfcbank)" className="w-full px-4 py-2 border rounded-md outline-none focus:border-green-500" />
-                      <div className="bg-blue-50 p-3 rounded text-xs text-blue-700">
-                          A payment request will be sent to your UPI app. Please approve it within 5 minutes.
+                  <div className="space-y-4 animate-in fade-in bg-yellow-50 p-6 rounded-xl border border-yellow-100 text-center">
+                      <div className="flex justify-center mb-2">
+                        <AlertTriangle className="text-yellow-600" size={40} />
                       </div>
+                      <h3 className="text-yellow-800 font-bold">Connection Timed Out</h3>
+                      <div className="text-xs font-mono text-yellow-700 bg-yellow-100 p-2 rounded">
+                        Error 408: Bank Server Unreachable.<br/>UPI servers are currently experiencing high load.
+                      </div>
+                      <p className="text-sm text-gray-600 pt-2">Recommended: Use <span className="font-bold">Scan QR</span> to avoid delays.</p>
                   </div>
               )}
 
+              {/* --- WORKING QR SCANNER --- */}
               {method === 'scan' && (
                   <div className="text-center space-y-4 animate-in fade-in">
                       <p className="text-sm text-gray-600">Scan this QR code with any UPI app</p>
@@ -204,15 +184,17 @@ const Payment = ({ order, clearCart, user }) => {
                       <div className="bg-yellow-50 p-3 rounded text-xs text-yellow-800 text-left">
                           <strong>Note:</strong> After scanning and paying, please click the button below to confirm.
                       </div>
+                      
+                      {/* ONLY SHOW BUTTON FOR SCAN METHOD */}
+                      <button 
+                          className="w-full bg-green-600 text-white py-3 rounded-md font-bold hover:bg-green-700 transition shadow-md mt-4"
+                          disabled={isProcessing}
+                      >
+                          I Have Paid
+                      </button>
                   </div>
               )}
               
-              <button 
-                  className="w-full bg-green-600 text-white py-3 rounded-md font-bold hover:bg-green-700 transition shadow-md mt-4"
-                  disabled={isProcessing}
-              >
-                  {method === 'scan' ? 'I Have Paid' : `Pay Rs. ${order.total}`}
-              </button>
           </form>
           
           <div className="mt-6 pt-6 border-t border-gray-100">
