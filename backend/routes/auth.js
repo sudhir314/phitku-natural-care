@@ -28,7 +28,7 @@ const sendEmail = async (to, subject, textContent) => {
   
   // SENDER SETTINGS
   // Note: Until you verify a domain, this might show as "via sendinblue.com"
-  sendSmtpEmail.sender = { "name": "Phitku Team", "email": "sahilsaini314on@gmail.com" }; 
+  sendSmtpEmail.sender = { "name": "Natural Living Team", "email": "sahilsaini314on@gmail.com" }; 
   sendSmtpEmail.to = [{ "email": to }];
 
   try {

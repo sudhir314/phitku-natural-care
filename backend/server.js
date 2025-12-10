@@ -37,6 +37,11 @@ mongoose.connect(process.env.MONGO_URI)
     .catch((err) => console.log("MongoDB Connection Error:", err));
 
 // --- 4. ROUTES ---
+// UptimeRobot Keep-Alive Route (New Feature)
+app.get('/', (req, res) => {
+    res.send("Phitku Server is Running! 🚀");
+});
+
 const authRoutes = require('./routes/auth');
 const productRoutes = require('./routes/productRoutes'); 
 const orderRoutes = require('./routes/orderRoutes');     
