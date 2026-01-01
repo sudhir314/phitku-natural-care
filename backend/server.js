@@ -14,12 +14,6 @@ app.use(cors({
         'http://localhost:3000', 
         'http://127.0.0.1:3000',
         'https://sudhir314.github.io', 
-        // Allow HTTPS (Secure)
-        'https://www.solvewithsudhir.in',
-        'https://solvewithsudhir.in',
-        // Allow HTTP (Insecure - Needed while DNS propagates)
-        'http://www.solvewithsudhir.in',
-        'http://solvewithsudhir.in',
         process.env.CLIENT_URL
     ].filter(Boolean), 
     credentials: true,
